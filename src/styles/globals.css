@@ -1837,3 +1837,82 @@ ol {
   opacity: 0.85;
   transform: translateY(-1px);
 }
+
+/* ─── SCROLL TO TOP ──────────────────────────────────────────────────────── */
+.scroll-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: none;
+  cursor: pointer;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px) scale(0.9);
+  transition: opacity var(--duration-base) var(--ease),
+    visibility var(--duration-base) var(--ease),
+    transform var(--duration-base) var(--ease),
+    background-color var(--duration-fast) var(--ease);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+@media (min-width: 769px) {
+  .scroll-to-top {
+    display: none !important;
+  }
+}
+
+.scroll-to-top--visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.scroll-to-top:hover {
+  background: var(--bg-subtle);
+  transform: scale(1.05);
+}
+
+.scroll-to-top:active {
+  transform: scale(0.95);
+}
+
+.scroll-to-top__circle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.scroll-to-top__circle-track {
+  stroke: var(--border);
+}
+
+.scroll-to-top__circle-progress {
+  stroke: var(--accent);
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.scroll-to-top__icon {
+  position: relative;
+  z-index: 2;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--duration-base) var(--ease);
+}
+
+.scroll-to-top:hover .scroll-to-top__icon {
+  transform: translateY(-2px);
+}

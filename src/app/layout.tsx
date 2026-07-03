@@ -3,6 +3,7 @@ import '@/styles/globals.css';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SmoothScrollProvider from '@/components/ui/SmoothScrollProvider';
+import ScrollToTop from '@/components/ui/ScrollToTop';
 
 export const metadata: Metadata = {
   title: {
@@ -50,6 +51,7 @@ export default function RootLayout({
           <Header />
           <main>{children}</main>
           <Footer />
+          <ScrollToTop />
         </SmoothScrollProvider>
       </body>
     </html>
