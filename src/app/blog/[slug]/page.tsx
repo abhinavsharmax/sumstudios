@@ -29,18 +29,18 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <>
-      {/* Article hero */}
-      <div className="blog-post-cover">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={post.coverImage}
-          alt={post.title}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          loading="eager"
-        />
-      </div>
+      <div className="container" style={{ paddingTop: 'calc(var(--header-h) + var(--space-md))' }}>
+        {/* Article hero */}
+        <div className="blog-post-cover">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={post.coverImage}
+            alt={post.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            loading="eager"
+          />
+        </div>
 
-      <div className="container">
         <div className="blog-post-layout">
           {/* Sidebar */}
           <ScrollReveal>

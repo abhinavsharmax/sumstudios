@@ -64,13 +64,13 @@
 
 @media (max-width: 1024px) {
   :root {
-    --padding-x: 1.5rem;
+    --padding-x: 1.75rem;
   }
 }
 
 @media (max-width: 640px) {
   :root {
-    --padding-x: 1.25rem;
+    --padding-x: 1.5rem;
   }
 }
 
