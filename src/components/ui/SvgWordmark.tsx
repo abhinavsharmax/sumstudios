@@ -3,11 +3,11 @@
 import { useMemo } from 'react';
 
 interface SvgWordmarkProps {
-  progress: number; // 0–1 scroll progress
+  progress?: number; // 0–1 scroll progress
   className?: string;
 }
 
-export default function SvgWordmark({ progress, className = '' }: SvgWordmarkProps) {
+export default function SvgWordmark({ progress = 0, className = '' }: SvgWordmarkProps) {
   // Stagger each letter: S starts at 0, U at 0.15, M at 0.3
   const letterProgress = useMemo(() => {
     const stagger = 0.15;

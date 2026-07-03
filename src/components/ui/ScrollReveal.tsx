@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, ReactNode, CSSProperties, useCallback } from 'react';
+import { useEffect, useRef, ReactNode, CSSProperties } from 'react';
 
 interface ScrollRevealProps {
   children: ReactNode;
@@ -25,43 +25,58 @@ export default function ScrollReveal({
 }: ScrollRevealProps) {
   const ref = useRef<HTMLElement>(null);
 
-  const handleParallax = useCallback(() => {
-    const el = ref.current;
-    if (!el || !parallax) return;
-
-    const rect = el.getBoundingClientRect();
-    const windowH = window.innerHeight;
-    const center = rect.top + rect.height / 2;
-    const offset = (center - windowH / 2) * parallaxSpeed;
-
-    el.style.setProperty('--parallax-y', `${offset}px`);
-  }, [parallax, parallaxSpeed]);
-
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    const observer = new IntersectionObserver(
+    let isIntersecting = false;
+    let rAFId: number | null = null;
+
+    // Reveal Observer
+    const revealObserver = new IntersectionObserver(
       ([entry]) => {
+        isIntersecting = entry.isIntersecting;
         if (entry.isIntersecting) {
           el.classList.add('is-visible');
-          observer.unobserve(el);
         }
       },
-      { threshold: 0.08, rootMargin: '0px 0px -60px 0px' }
+      { threshold: 0.05, rootMargin: '0px 0px -40px 0px' }
     );
 
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+    revealObserver.observe(el);
 
-  useEffect(() => {
-    if (!parallax) return;
+    // Parallax update function
+    const onScroll = () => {
+      if (!isIntersecting || !parallax) return;
 
-    window.addEventListener('scroll', handleParallax, { passive: true });
-    handleParallax();
-    return () => window.removeEventListener('scroll', handleParallax);
-  }, [parallax, handleParallax]);
+      if (rAFId) return;
+
+      rAFId = requestAnimationFrame(() => {
+        const rect = el.getBoundingClientRect();
+        const windowH = window.innerHeight;
+        const center = rect.top + rect.height / 2;
+        const offset = (center - windowH / 2) * parallaxSpeed;
+        
+        el.style.setProperty('--parallax-y', `${offset}px`);
+        rAFId = null;
+      });
+    };
+
+    if (parallax) {
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+
+    return () => {
+      revealObserver.disconnect();
+      if (parallax) {
+        window.removeEventListener('scroll', onScroll);
+      }
+      if (rAFId) {
+        cancelAnimationFrame(rAFId);
+      }
+    };
+  }, [parallax, parallaxSpeed]);
 
   const delayClass = delay > 0 ? ` reveal-delay-${delay}` : '';
   const dirClass = from !== 'bottom' ? ` reveal--from-${from}` : '';

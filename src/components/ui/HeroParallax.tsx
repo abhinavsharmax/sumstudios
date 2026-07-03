@@ -1,50 +1,163 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import SvgWordmark from './SvgWordmark';
 import Link from 'next/link';
 
 export default function HeroParallax() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const bgRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const fogRef = useRef<HTMLDivElement>(null);
+  const fog2Ref = useRef<HTMLDivElement>(null);
+  const linesRef = useRef<HTMLDivElement>(null);
+  const wordmarkRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const scrollHintRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = useCallback(() => {
+  useEffect(() => {
+    let rAFId: number | null = null;
+    let isIntersecting = false;
+
     const section = sectionRef.current;
     if (!section) return;
 
-    const rect = section.getBoundingClientRect();
-    const sectionHeight = section.offsetHeight;
-    const viewportHeight = window.innerHeight;
+    // Direct DOM styling update function
+    const updateStyles = (progress: number) => {
+      // 1. Background image (scale from 1.15 to 1.0, translate Y slightly)
+      if (bgRef.current) {
+        const bgScale = 1.15 - progress * 0.15;
+        const bgY = progress * -80;
+        bgRef.current.style.transform = `scale(${bgScale}) translateY(${bgY}px) translateZ(0)`;
+      }
 
-    // scrollProgress: 0 at top, 1 when sticky viewport scrolls out
-    const scrolled = -rect.top;
-    const totalScroll = sectionHeight - viewportHeight;
-    const progress = Math.min(1, Math.max(0, scrolled / totalScroll));
+      // 2. Dark gradient overlay
+      if (overlayRef.current) {
+        const overlayOpacity = 0.15 + progress * 0.45;
+        overlayRef.current.style.opacity = `${overlayOpacity}`;
+      }
 
-    setScrollProgress(progress);
-  }, []);
+      // 3. Fog layers
+      const fogOpacity = 1 - progress * 0.8;
+      if (fogRef.current) {
+        const fogY = progress * -120;
+        fogRef.current.style.opacity = `${fogOpacity}`;
+        fogRef.current.style.transform = `translateY(${fogY}px) translateZ(0)`;
+      }
+      if (fog2Ref.current) {
+        const fog2Y = progress * -60;
+        fog2Ref.current.style.opacity = `${fogOpacity * 0.6}`;
+        fog2Ref.current.style.transform = `translateY(${fog2Y}px) translateZ(0)`;
+      }
 
-  useEffect(() => {
+      // 4. Lines overlay
+      if (linesRef.current) {
+        const layer1Y = progress * -40;
+        linesRef.current.style.transform = `translateY(${layer1Y}px) translateZ(0)`;
+        linesRef.current.style.opacity = `${0.08 + progress * 0.12}`;
+      }
+
+      // 5. Wordmark
+      if (wordmarkRef.current) {
+        const layer2Y = progress * -100;
+        const wordmarkScale = 0.6 + progress * 0.4;
+        const wordmarkOpacity = Math.min(1, progress * 2.5);
+        wordmarkRef.current.style.transform = `translateY(${layer2Y}px) scale(${wordmarkScale}) translateZ(0)`;
+        wordmarkRef.current.style.opacity = `${wordmarkOpacity}`;
+
+        // Directly manipulate the SVG Wordmark paths
+        const svgEl = wordmarkRef.current.querySelector('svg');
+        if (svgEl) {
+          const paths = svgEl.querySelectorAll('path');
+          const text = svgEl.querySelector('text');
+          
+          const strokeDashTotal = 800;
+          const stagger = 0.15;
+          
+          // Update each letter path (S, U, M)
+          for (let i = 0; i < 3; i++) {
+            const path = paths[i];
+            if (path) {
+              const start = i * stagger;
+              const end = start + 0.55;
+              const p = Math.min(1, Math.max(0, (progress - start) / (end - start)));
+              path.style.strokeDashoffset = `${strokeDashTotal * (1 - p)}`;
+              
+              const fillOpacity = Math.min(1, Math.max(0, (p - 0.7) / 0.3));
+              path.setAttribute('fill-opacity', `${fillOpacity}`);
+            }
+          }
+
+          // Update subtitle text "STUDIO"
+          if (text) {
+            const textOpacity = Math.min(1, Math.max(0, (progress - 0.6) / 0.25));
+            text.style.opacity = `${textOpacity}`;
+          }
+        }
+      }
+
+      // 6. Content overlay
+      if (contentRef.current) {
+        const contentOpacity = Math.min(1, Math.max(0, (progress - 0.35) / 0.3));
+        const contentY = 60 - progress * 90;
+        contentRef.current.style.opacity = `${contentOpacity}`;
+        contentRef.current.style.transform = `translateY(${contentY}px) translateZ(0)`;
+      }
+
+      // 7. Scroll hint
+      if (scrollHintRef.current) {
+        scrollHintRef.current.style.opacity = `${1 - progress * 4}`;
+      }
+
+      // 8. Progress Bar
+      if (progressBarRef.current) {
+        progressBarRef.current.style.height = `${progress * 100}%`;
+      }
+    };
+
+    const handleScroll = () => {
+      if (!isIntersecting) return;
+
+      if (rAFId) return;
+
+      rAFId = requestAnimationFrame(() => {
+        const rect = section.getBoundingClientRect();
+        const sectionHeight = section.offsetHeight;
+        const viewportHeight = window.innerHeight;
+
+        const scrolled = -rect.top;
+        const totalScroll = sectionHeight - viewportHeight;
+        const progress = Math.min(1, Math.max(0, scrolled / totalScroll));
+
+        updateStyles(progress);
+        rAFId = null;
+      });
+    };
+
+    // Use IntersectionObserver to stop scroll calculations when hero is out of view
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isIntersecting = entry.isIntersecting;
+        if (entry.isIntersecting) {
+          handleScroll();
+        }
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(section);
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    
+    // Initial paint
+    updateStyles(0);
 
-  // Derived animation values
-  const bgScale = 1.15 - scrollProgress * 0.15; // 1.15 → 1.0
-  const bgY = scrollProgress * -80; // parallax shift up
-  const fogOpacity = 1 - scrollProgress * 0.8;
-  const fogY = scrollProgress * -120;
-  const fog2Y = scrollProgress * -60;
-  const wordmarkScale = 0.6 + scrollProgress * 0.4; // 0.6 → 1.0
-  const wordmarkOpacity = Math.min(1, scrollProgress * 2.5);
-  const contentOpacity = Math.min(1, Math.max(0, (scrollProgress - 0.35) / 0.3));
-  const contentY = 60 - scrollProgress * 90; // slides up
-  const overlayOpacity = 0.15 + scrollProgress * 0.45;
-
-  // Parallax layers move at different speeds
-  const layer1Y = scrollProgress * -40;
-  const layer2Y = scrollProgress * -100;
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+      if (rAFId) cancelAnimationFrame(rAFId);
+    };
+  }, []);
 
   return (
     <section
@@ -52,15 +165,9 @@ export default function HeroParallax() {
       className="hero-parallax"
       aria-label="Hero section"
     >
-      {/* Sticky viewport — stays fixed while parent scrolls */}
       <div className="hero-parallax__viewport">
         {/* Layer 1: Background image */}
-        <div
-          className="hero-parallax__bg"
-          style={{
-            transform: `scale(${bgScale}) translateY(${bgY}px)`,
-          }}
-        >
+        <div ref={bgRef} className="hero-parallax__bg">
           <img
             src="https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=1920&auto=format&fit=crop&q=85"
             alt="Architectural pavilion"
@@ -70,71 +177,35 @@ export default function HeroParallax() {
         </div>
 
         {/* Layer 2: Dark gradient overlay */}
-        <div
-          className="hero-parallax__overlay"
-          style={{ opacity: overlayOpacity }}
-        />
+        <div ref={overlayRef} className="hero-parallax__overlay" />
 
         {/* Layer 3: Atmospheric fog — bottom */}
-        <div
-          className="hero-parallax__fog hero-parallax__fog--bottom"
-          style={{
-            opacity: fogOpacity,
-            transform: `translateY(${fogY}px)`,
-          }}
-        />
+        <div ref={fogRef} className="hero-parallax__fog hero-parallax__fog--bottom" />
 
         {/* Layer 4: Secondary fog — mid */}
-        <div
-          className="hero-parallax__fog hero-parallax__fog--mid"
-          style={{
-            opacity: fogOpacity * 0.6,
-            transform: `translateY(${fog2Y}px)`,
-          }}
-        />
+        <div ref={fog2Ref} className="hero-parallax__fog hero-parallax__fog--mid" />
 
         {/* Layer 5: Architectural line SVG decorations */}
-        <div
-          className="hero-parallax__lines"
-          style={{
-            transform: `translateY(${layer1Y}px)`,
-            opacity: 0.08 + scrollProgress * 0.12,
-          }}
-        >
+        <div ref={linesRef} className="hero-parallax__lines">
           <svg viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg" className="hero-parallax__lines-svg">
-            {/* Horizontal construction lines */}
             <line x1="0" y1="540" x2="1920" y2="540" stroke="currentColor" strokeWidth="0.5" opacity="0.3" />
             <line x1="0" y1="360" x2="1920" y2="360" stroke="currentColor" strokeWidth="0.5" opacity="0.15" />
             <line x1="0" y1="720" x2="1920" y2="720" stroke="currentColor" strokeWidth="0.5" opacity="0.15" />
-            {/* Vertical guides */}
             <line x1="960" y1="0" x2="960" y2="1080" stroke="currentColor" strokeWidth="0.5" opacity="0.2" />
             <line x1="480" y1="0" x2="480" y2="1080" stroke="currentColor" strokeWidth="0.5" opacity="0.08" />
             <line x1="1440" y1="0" x2="1440" y2="1080" stroke="currentColor" strokeWidth="0.5" opacity="0.08" />
-            {/* Diagonal accent */}
             <line x1="0" y1="1080" x2="960" y2="0" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
             <line x1="960" y1="1080" x2="1920" y2="0" stroke="currentColor" strokeWidth="0.3" opacity="0.06" />
           </svg>
         </div>
 
         {/* Layer 6: Large SVG Wordmark */}
-        <div
-          className="hero-parallax__wordmark"
-          style={{
-            transform: `translateY(${layer2Y}px) scale(${wordmarkScale})`,
-            opacity: wordmarkOpacity,
-          }}
-        >
-          <SvgWordmark progress={scrollProgress} />
+        <div ref={wordmarkRef} className="hero-parallax__wordmark">
+          <SvgWordmark />
         </div>
 
         {/* Layer 7: Content — headline, subtitle, CTA */}
-        <div
-          className="hero-parallax__content"
-          style={{
-            opacity: contentOpacity,
-            transform: `translateY(${contentY}px)`,
-          }}
-        >
+        <div ref={contentRef} className="hero-parallax__content">
           <div className="hero-parallax__content-inner">
             <p className="hero-parallax__eyebrow">
               Architecture · Interiors · Objects
@@ -167,22 +238,14 @@ export default function HeroParallax() {
         </div>
 
         {/* Scroll indicator */}
-        <div
-          className="hero-parallax__scroll-hint"
-          style={{
-            opacity: 1 - scrollProgress * 4,
-          }}
-        >
+        <div ref={scrollHintRef} className="hero-parallax__scroll-hint">
           <div className="hero-parallax__scroll-line" />
           <span className="hero-parallax__scroll-text">Scroll</span>
         </div>
 
         {/* Progress bar */}
         <div className="hero-parallax__progress">
-          <div
-            className="hero-parallax__progress-bar"
-            style={{ height: `${scrollProgress * 100}%` }}
-          />
+          <div ref={progressBarRef} className="hero-parallax__progress-bar" />
         </div>
       </div>
     </section>

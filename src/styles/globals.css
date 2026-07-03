@@ -1388,6 +1388,49 @@ ol {
 }
 
 /* ─── BLOG POST ──────────────────────────────────────────────────────────── */
+.blog-post-cover {
+  width: 100%;
+  aspect-ratio: 21/9;
+  overflow: hidden;
+  background: var(--bg-subtle);
+  max-height: 560px;
+}
+
+.blog-post-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: var(--space-xl);
+  padding-top: var(--space-lg);
+}
+
+.blog-post-sidebar {
+  position: sticky;
+  top: calc(var(--header-h) + 2rem);
+}
+
+@media (max-width: 992px) {
+  .blog-post-layout {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+  
+  .blog-post-cover {
+    aspect-ratio: 16/9;
+  }
+  
+  .blog-post-sidebar {
+    position: relative;
+    top: 0;
+    margin-bottom: var(--space-md);
+  }
+}
+
+@media (max-width: 576px) {
+  .blog-post-cover {
+    aspect-ratio: 4/3;
+  }
+}
+
 .post-body {
   max-width: 68ch;
 }

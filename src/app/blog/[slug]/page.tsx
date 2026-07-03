@@ -30,15 +30,7 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <>
       {/* Article hero */}
-      <div
-        style={{
-          width: '100%',
-          aspectRatio: '21/9',
-          overflow: 'hidden',
-          background: 'var(--bg-subtle)',
-          maxHeight: 560,
-        }}
-      >
+      <div className="blog-post-cover">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={post.coverImage}
@@ -49,17 +41,10 @@ export default async function BlogPostPage({ params }: Props) {
       </div>
 
       <div className="container">
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '220px 1fr',
-            gap: 'var(--space-xl)',
-            paddingTop: 'var(--space-lg)',
-          }}
-        >
+        <div className="blog-post-layout">
           {/* Sidebar */}
           <ScrollReveal>
-            <div style={{ position: 'sticky', top: 'calc(var(--header-h) + 2rem)' }}>
+            <div className="blog-post-sidebar">
               <p className="label mb-sm">{post.category}</p>
               <DivisionLine />
               <div style={{ paddingTop: 'var(--space-sm)' }}>
